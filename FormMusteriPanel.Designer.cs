@@ -1,83 +1,122 @@
-﻿namespace kuafor
+namespace kuafor
 {
     partial class FormMusteriPanel
     {
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.Label lblHosgeldin;
-        private System.Windows.Forms.ListBox lstRandevular;
-        private System.Windows.Forms.Button BtnYeniRandevu;
-        private System.Windows.Forms.Button BtnCikis;
+
+        private System.Windows.Forms.Panel panelSol;
+        private System.Windows.Forms.Button btnRandevularim;
+        private System.Windows.Forms.Button btnYeniRandevu;
+        private System.Windows.Forms.Button btnCikis;
+        private System.Windows.Forms.Panel panelUst;
+        private System.Windows.Forms.Label lblKullanici;
+        private System.Windows.Forms.Panel panelContainer;
 
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
-            {
                 components.Dispose();
-            }
             base.Dispose(disposing);
         }
 
         private void InitializeComponent()
         {
-            this.lblHosgeldin = new System.Windows.Forms.Label();
-            this.lstRandevular = new System.Windows.Forms.ListBox();
-            this.BtnYeniRandevu = new System.Windows.Forms.Button();
-            this.BtnCikis = new System.Windows.Forms.Button();
+            this.panelSol = new System.Windows.Forms.Panel();
+            this.btnYeniRandevu = new System.Windows.Forms.Button();
+            this.btnRandevularim = new System.Windows.Forms.Button();
+            this.btnCikis = new System.Windows.Forms.Button();
+            this.panelUst = new System.Windows.Forms.Panel();
+            this.lblKullanici = new System.Windows.Forms.Label();
+            this.panelContainer = new System.Windows.Forms.Panel();
+
+            this.panelSol.SuspendLayout();
+            this.panelUst.SuspendLayout();
             this.SuspendLayout();
+
             // 
-            // lblHosgeldin
+            // panelSol
             // 
-            this.lblHosgeldin.AutoSize = true;
-            this.lblHosgeldin.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.lblHosgeldin.Location = new System.Drawing.Point(200, 20);
-            this.lblHosgeldin.Name = "lblHosgeldin";
-            this.lblHosgeldin.Size = new System.Drawing.Size(155, 37);
-            this.lblHosgeldin.TabIndex = 0;
-            this.lblHosgeldin.Text = "Hoş geldin";
+            this.panelSol.BackColor = System.Drawing.Color.MediumSlateBlue;
+            this.panelSol.Controls.Add(this.btnYeniRandevu);
+            this.panelSol.Controls.Add(this.btnRandevularim);
+            this.panelSol.Controls.Add(this.btnCikis);
+            this.panelSol.Dock = System.Windows.Forms.DockStyle.Left;
+            this.panelSol.Location = new System.Drawing.Point(0, 0);
+            this.panelSol.Name = "panelSol";
+            this.panelSol.Size = new System.Drawing.Size(200, 700);
+
             // 
-            // lstRandevular
+            // btnYeniRandevu
             // 
-            this.lstRandevular.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.lstRandevular.ItemHeight = 28;
-            this.lstRandevular.Location = new System.Drawing.Point(100, 80);
-            this.lstRandevular.Name = "lstRandevular";
-            this.lstRandevular.Size = new System.Drawing.Size(400, 200);
-            this.lstRandevular.TabIndex = 1;
+            this.btnYeniRandevu.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnYeniRandevu.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnYeniRandevu.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnYeniRandevu.ForeColor = System.Drawing.Color.White;
+            this.btnYeniRandevu.Location = new System.Drawing.Point(0, 60);
+            this.btnYeniRandevu.Size = new System.Drawing.Size(200, 60);
+            this.btnYeniRandevu.Text = "Yeni Randevu";
+            this.btnYeniRandevu.Click += new System.EventHandler(this.btnYeniRandevu_Click);
+
             // 
-            // BtnYeniRandevu
+            // btnRandevularim
             // 
-            this.BtnYeniRandevu.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.BtnYeniRandevu.Location = new System.Drawing.Point(200, 300);
-            this.BtnYeniRandevu.Name = "BtnYeniRandevu";
-            this.BtnYeniRandevu.Size = new System.Drawing.Size(200, 40);
-            this.BtnYeniRandevu.TabIndex = 2;
-            this.BtnYeniRandevu.Text = "Yeni Randevu Oluştur";
-            this.BtnYeniRandevu.Click += new System.EventHandler(this.BtnYeniRandevu_Click);
+            this.btnRandevularim.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnRandevularim.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRandevularim.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnRandevularim.ForeColor = System.Drawing.Color.White;
+            this.btnRandevularim.Location = new System.Drawing.Point(0, 0);
+            this.btnRandevularim.Size = new System.Drawing.Size(200, 60);
+            this.btnRandevularim.Text = "Randevularım";
+            this.btnRandevularim.Click += new System.EventHandler(this.btnRandevularim_Click);
+
             // 
-            // BtnCikis
+            // btnCikis
             // 
-            this.BtnCikis.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.BtnCikis.Location = new System.Drawing.Point(200, 350);
-            this.BtnCikis.Name = "BtnCikis";
-            this.BtnCikis.Size = new System.Drawing.Size(200, 40);
-            this.BtnCikis.TabIndex = 3;
-            this.BtnCikis.Text = "Çıkış Yap";
-            this.BtnCikis.Click += new System.EventHandler(this.BtnCikis_Click);
+            this.btnCikis.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.btnCikis.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCikis.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnCikis.ForeColor = System.Drawing.Color.White;
+            this.btnCikis.Size = new System.Drawing.Size(200, 60);
+            this.btnCikis.Text = "Çıkış";
+            this.btnCikis.Click += new System.EventHandler(this.btnCikis_Click);
+
+            // 
+            // panelUst
+            // 
+            this.panelUst.BackColor = System.Drawing.Color.White;
+            this.panelUst.Controls.Add(this.lblKullanici);
+            this.panelUst.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelUst.Location = new System.Drawing.Point(200, 0);
+            this.panelUst.Size = new System.Drawing.Size(900, 70);
+
+            // 
+            // lblKullanici
+            // 
+            this.lblKullanici.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
+            this.lblKullanici.Location = new System.Drawing.Point(20, 20);
+            this.lblKullanici.AutoSize = true;
+
+            // 
+            // panelContainer
+            // 
+            this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelContainer.Location = new System.Drawing.Point(200, 70);
+            this.panelContainer.BackColor = System.Drawing.Color.White;
+
             // 
             // FormMusteriPanel
             // 
-            this.ClientSize = new System.Drawing.Size(600, 450);
-            this.Controls.Add(this.lblHosgeldin);
-            this.Controls.Add(this.lstRandevular);
-            this.Controls.Add(this.BtnYeniRandevu);
-            this.Controls.Add(this.BtnCikis);
-            this.Name = "FormMusteriPanel";
+            this.ClientSize = new System.Drawing.Size(1100, 700);
+            this.Controls.Add(this.panelContainer);
+            this.Controls.Add(this.panelUst);
+            this.Controls.Add(this.panelSol);
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Name = "FormMusteriPanel";
             this.Text = "Müşteri Paneli";
-            this.Load += new System.EventHandler(this.FormMusteriPanel_Load);
-            this.ResumeLayout(false);
-            this.PerformLayout();
 
+            this.panelSol.ResumeLayout(false);
+            this.panelUst.ResumeLayout(false);
+            this.ResumeLayout(false);
         }
     }
 }
