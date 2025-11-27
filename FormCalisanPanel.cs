@@ -1,8 +1,9 @@
-﻿using kuafor.Models;
+using kuafor.Models;
 using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Microsoft.EntityFrameworkCore;
 
 namespace kuafor
 {
@@ -16,6 +17,12 @@ namespace kuafor
 
         private const int HourHeight = 40;
         private const int DayWidth = 110;
+        // 📌 Haftalık takvim için
+        private DateTime aktifHafta = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1);
+        private Button btnOncekiHafta;
+        private Button btnSonrakiHafta;
+        private Label lblHaftaAraligi;
+
 
         string[] Gunler = { "Pzt", "Salı", "Çar", "Per", "Cum", "Cts", "Paz" };
 
@@ -24,36 +31,98 @@ namespace kuafor
             InitializeComponent();
             _calisan = calisan;
 
-            // 🔥 Form yüklenince takvim ve işlemler gelsin
             this.Load += FormCalisanPanel_Load;
         }
 
         private void FormCalisanPanel_Load(object sender, EventArgs e)
         {
-            // Üst başlık
-            lblCalisan.Text = $"{_calisan.Ad} {_calisan.Soyad}  |  Uzmanlık: {_calisan.Uzmanlik}";
+            if (_calisan.Salon == null)
+            {
+                MessageBox.Show("Bu çalışanın bağlı olduğu salon bulunamadı!",
+                                "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
-            // SALON ÇALIŞMA SAATLERİ
+            lblCalisan.Text = $"{_calisan.Ad} {_calisan.Soyad} | Uzmanlık: {_calisan.Uzmanlik}";
+
             StartHour = _calisan.Salon.CalismaBaslangic.Hours;
             EndHour = _calisan.Salon.CalismaBitis.Hours;
 
             LoadYapabildigiIslemler();
+            CreateWeekHeader();
             LoadTakvimGrid();
+
+
+        }
+        private bool headerCreated = false;
+
+        private void CreateWeekHeader()
+        {
+            if (headerCreated) return; // ⭐ zaten oluşturulduysa tekrar yapma
+            headerCreated = true;
+
+            // ◀ Önceki Hafta
+            btnOncekiHafta = new Button
+            {
+                Text = "◀",
+                Width = 40,
+                Height = 30,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Location = new Point(panelTakvim.Left + 10, panelTakvim.Top - 40)
+            };
+            btnOncekiHafta.Click += (s, e) =>
+            {
+                aktifHafta = aktifHafta.AddDays(-7);
+                LoadTakvimGrid();
+            };
+            this.Controls.Add(btnOncekiHafta);
+
+            // ▶ Sonraki Hafta
+            btnSonrakiHafta = new Button
+            {
+                Text = "▶",
+                Width = 40,
+                Height = 30,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Location = new Point(panelTakvim.Right - 50, panelTakvim.Top - 40)
+            };
+            btnSonrakiHafta.Click += (s, e) =>
+            {
+                aktifHafta = aktifHafta.AddDays(7);
+                LoadTakvimGrid();
+            };
+            this.Controls.Add(btnSonrakiHafta);
+
+            // 📅 Hafta aralığı label
+            lblHaftaAraligi = new Label
+            {
+                AutoSize = true,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Location = new Point(panelTakvim.Left + 200, panelTakvim.Top - 35),
+                Text = "" // ilk değer, grid yüklenince dolacak
+            };
+
+            this.Controls.Add(lblHaftaAraligi);
         }
 
-        // Çalışanın yapabildiği işlemler (Admin tarafından atanmış)
+
+
+        // Çalışanın yapabildiği işlemleri yükler
         private void LoadYapabildigiIslemler()
         {
             lstIslemler.Items.Clear();
+
             var islemler = db.Calisanlar
-                .Where(c => c.Id == _calisan.Id)
-                .SelectMany(c => c.Islemler)
+                .Include("Islemler")
+                .First(c => c.Id == _calisan.Id)
+                .Islemler
                 .ToList();
 
             foreach (var islem in islemler)
                 lstIslemler.Items.Add($"• {islem.Ad} ({islem.SureDakika} dk)");
         }
 
+        // Takvimi çizer
         private void LoadTakvimGrid()
         {
             panelTakvim.Controls.Clear();
@@ -67,21 +136,30 @@ namespace kuafor
 
             panelTakvim.Controls.Add(grid);
 
-            // GÜN BAŞLIKLARI
+            // 📅 Haftalık tarih aralığını label’da göster
+            DateTime bas = aktifHafta;
+            DateTime bit = aktifHafta.AddDays(6);
+            lblHaftaAraligi.Text = $"{bas:dd MMMM} – {bit:dd MMMM}";
+
+            // 📌 Gün başlıkları (tarihli)
             for (int d = 0; d < 7; d++)
             {
+                DateTime tarih = aktifHafta.AddDays(d);
+
                 Label gunLbl = new Label
                 {
-                    Text = Gunler[d],
+                    Text = $"{Gunler[d]}\n{tarih:dd}",
                     Location = new Point(d * DayWidth + 50, 10),
-                    Size = new Size(DayWidth, 30),
+                    Size = new Size(DayWidth, 40),
                     TextAlign = ContentAlignment.MiddleCenter,
                     Font = new Font("Segoe UI", 10, FontStyle.Bold)
                 };
+
                 grid.Controls.Add(gunLbl);
             }
 
-            // SAATLER
+
+            // Saat etiketleri
             for (int saat = StartHour; saat <= EndHour; saat++)
             {
                 Label lbl = new Label
@@ -93,7 +171,7 @@ namespace kuafor
                 grid.Controls.Add(lbl);
             }
 
-            // HÜCRELER
+            // Boş hücreleri çiz
             for (int gun = 0; gun < 7; gun++)
             {
                 for (int saat = StartHour; saat < EndHour; saat++)
@@ -101,7 +179,7 @@ namespace kuafor
                     Panel cell = new Panel
                     {
                         BorderStyle = BorderStyle.FixedSingle,
-                        BackColor = Color.White,
+                        BackColor = Color.LightGray,
                         Location = new Point(gun * DayWidth + 50, (saat - StartHour) * HourHeight + 50),
                         Size = new Size(DayWidth, HourHeight)
                     };
@@ -109,94 +187,128 @@ namespace kuafor
                 }
             }
 
-            // UYGUNLUK EKLE
             UygunluklariIsle(grid);
-
-            // RANDEVULARI EKLE
             TakvimeRandevuEkle(grid);
         }
 
+        // Uygunlukları beyaz renkle boyar
         private void UygunluklariIsle(Panel grid)
         {
-            var uygunluklar = db.CalisanUygunluklar
+            var uygunluklar = db.CalisanUygunlukTarihleri
                 .Where(u => u.CalisanId == _calisan.Id)
                 .ToList();
 
-            foreach (var u in uygunluklar)
+            for (int d = 0; d < 7; d++)
             {
-                int gun = u.Gun - 1;
+                DateTime gunTarihi = aktifHafta.AddDays(d);
 
-                for (int saat = StartHour; saat < EndHour; saat++)
+                var oGunUygunluk = uygunluklar
+                    .Where(u => u.Tarih.Date == gunTarihi.Date)
+                    .ToList();
+
+                if (oGunUygunluk.Count == 0)
+                    continue;
+
+                foreach (var u in oGunUygunluk)
                 {
-                    bool calisiyor = saat >= u.Baslangic.Hours && saat < u.Bitis.Hours;
+                    for (int saat = StartHour; saat < EndHour; saat++)
+                    {
+                        TimeSpan cellStart = new TimeSpan(saat, 0, 0);
+                        TimeSpan cellEnd = cellStart.Add(TimeSpan.FromHours(1));
 
-                    var cell = grid.Controls.OfType<Panel>()
-                        .FirstOrDefault(p =>
-                            p.Location.X == gun * DayWidth + 50 &&
-                            p.Location.Y == (saat - StartHour) * HourHeight + 50
-                        );
+                        bool calisiyor = u.Baslangic < cellEnd && u.Bitis > cellStart;
 
-                    if (cell != null)
-                        cell.BackColor = calisiyor ? Color.White : Color.LightGray;
+                        var cell = grid.Controls.OfType<Panel>()
+                            .FirstOrDefault(p =>
+                                p.Location.X == d * DayWidth + 50 &&
+                                p.Location.Y == (saat - StartHour) * HourHeight + 50
+                            );
+
+                        if (cell != null)
+                            cell.BackColor = calisiyor ? Color.White : Color.LightGray;
+                    }
                 }
             }
         }
+
 
         private void TakvimeRandevuEkle(Panel grid)
         {
             var randevular = db.Randevular
                 .Where(r => r.CalisanId == _calisan.Id)
+                .Include("Islem")
+                .Include("Musteri")
                 .ToList();
 
             foreach (var r in randevular)
             {
-                int gunIndex = ((int)r.Baslangic.DayOfWeek + 6) % 7;
+
+                // 📌 Bu randevu aktif haftaya ait değilse çizme
+                DateTime rGun = r.Baslangic.Date;
+                if (rGun < aktifHafta || rGun > aktifHafta.AddDays(6))
+                    continue;
+
+                int gunIndex = (int)(rGun - aktifHafta).TotalDays;
 
                 int basSaat = r.Baslangic.Hour;
                 int dakika = r.Baslangic.Minute;
                 int sure = (int)(r.Bitis - r.Baslangic).TotalMinutes;
 
-                int topOffset = (basSaat - StartHour) * HourHeight + (dakika * HourHeight / 60);
+                int topOffset =
+                    (basSaat - StartHour) * HourHeight +
+                    (dakika * HourHeight / 60);
 
                 Panel blok = new Panel
                 {
                     Location = new Point(gunIndex * DayWidth + 50, topOffset + 50),
                     Size = new Size(DayWidth - 3, (sure * HourHeight / 60) - 2),
-                    BackColor = r.OnayDurumu == 1 ? Color.LightGreen :
-                                r.OnayDurumu == 2 ? Color.LightCoral :
-                                                    Color.LightSkyBlue,
+                    BackColor =
+                        r.OnayDurumu == 1 ? Color.LightGreen :
+                        r.OnayDurumu == 2 ? Color.LightCoral :
+                                            Color.LightSkyBlue,
                     BorderStyle = BorderStyle.FixedSingle,
                     Tag = r
                 };
 
                 Label lbl = new Label
                 {
-                    Text = $"{r.Islem.Ad}\n{r.Musteri.Ad}",
+                    Text = $"{r.Islem.Ad}",
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.MiddleCenter,
                     ForeColor = Color.Black
                 };
 
                 blok.Controls.Add(lbl);
+
+                // 🟢 Tıklamayı hem blok hem de label yakalasın
                 blok.Click += RandevuDetayAc;
+                lbl.Click += RandevuDetayAc;
 
                 grid.Controls.Add(blok);
                 blok.BringToFront();
             }
         }
 
+
+        // Randevuya tıklayınca popup açılır
         private void RandevuDetayAc(object sender, EventArgs e)
         {
-            Panel blok = (Panel)sender;
+            // Eğer label'a tıkladıysan paneli Parent üzerinden al
+            Panel blok;
+
+            if (sender is Label lbl)
+                blok = (Panel)lbl.Parent;
+            else
+                blok = (Panel)sender;
+
             Randevu r = (Randevu)blok.Tag;
 
             string mesaj =
                 $"📌 Müşteri: {r.Musteri.Ad} {r.Musteri.Soyad}\n" +
                 $"✂ İşlem: {r.Islem.Ad}\n" +
                 $"📅 Tarih: {r.Baslangic:dd.MM.yyyy HH:mm}\n" +
-                $"⏳ Süre: {(r.Bitis - r.Baslangic).TotalMinutes} dakika\n" +
-                $"📍 Durum: {(r.OnayDurumu == 0 ? "Bekliyor" : r.OnayDurumu == 1 ? "Onaylandı" : "Reddedildi")}\n\n" +
-                "Randevu için işlem seçiniz:";
+                $"⏳ Süre: {(r.Bitis - r.Baslangic).TotalMinutes} dk\n" +
+                $"📍 Durum: {(r.OnayDurumu == 0 ? "Bekliyor" : r.OnayDurumu == 1 ? "Onaylandı" : "Reddedildi")}\n\n";
 
             var result = MessageBox.Show(
                 mesaj,
@@ -206,23 +318,103 @@ namespace kuafor
 
             if (result == DialogResult.Yes)
             {
-                r.OnayDurumu = 1;
+                r.OnayDurumu = 1; // onayla
                 db.SaveChanges();
-                MessageBox.Show("✔ Randevu Onaylandı");
             }
             else if (result == DialogResult.No)
             {
-                r.OnayDurumu = 2;
+                r.OnayDurumu = 2; // reddet
                 db.SaveChanges();
-                MessageBox.Show("❌ Randevu Reddedildi");
             }
 
             LoadTakvimGrid();
         }
 
-        private void FormCalisanPanel_Load_1(object sender, EventArgs e)
-        {
 
+        // Uygunluk ekleme butonu
+        private void btnUygunlukEkle_Click(object sender, EventArgs e)
+        {
+            var f = new FormCalisanUygunlukEkle(_calisan);
+            f.ShowDialog();
+            LoadTakvimGrid();
         }
+        private void btnRandevularim_Click(object sender, EventArgs e)
+        {
+            panelTakvim.Visible = false;
+            panelMain.Visible = true;
+
+            LoadCalisanRandevularim();
+        }
+        private void LoadCalisanRandevularim()
+        {
+            panelMain.Controls.Clear();
+
+            Label lbl = new Label
+            {
+                Text = "📅 Randevularım",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                ForeColor = Color.MediumSlateBlue,
+                Location = new Point(30, 20),
+                AutoSize = true
+            };
+            panelMain.Controls.Add(lbl);
+
+            DataGridView dgv = new DataGridView
+            {
+                Location = new Point(30, 70),
+                Size = new Size(900, 350),
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect
+            };
+            panelMain.Controls.Add(dgv);
+
+            var data = db.Randevular
+                .Where(r => r.CalisanId == _calisan.Id)
+                .Select(r => new
+                {
+                    r.Id,
+                    Müşteri = r.Musteri.Ad + " " + r.Musteri.Soyad,
+                    İşlem = r.Islem.Ad,
+                    Başlangıç = r.Baslangic,
+                    Bitiş = r.Bitis,
+                    Durum = r.OnayDurumu == 0 ? "Bekliyor" :
+                             r.OnayDurumu == 1 ? "Onaylandı" :
+                             "Reddedildi"
+                })
+                .OrderByDescending(r => r.Başlangıç)
+                .ToList();
+
+            dgv.DataSource = data;
+
+            // Renkleme
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                string durum = row.Cells["Durum"].Value?.ToString();
+                if (durum == "Onaylandı")
+                    row.DefaultCellStyle.BackColor = Color.LightGreen;
+                else if (durum == "Reddedildi")
+                    row.DefaultCellStyle.BackColor = Color.LightCoral;
+                else
+                    row.DefaultCellStyle.BackColor = Color.LightYellow;
+            }
+        }
+
+        private void btnTakvim_Click(object sender, EventArgs e)
+        {
+            panelMain.Visible = false;
+            panelTakvim.Visible = true;
+
+            LoadTakvimGrid();
+        }
+        private void btnTakvimeDon_Click(object sender, EventArgs e)
+        {
+            panelMain.Visible = false;   // randevular ekranını gizle
+            panelTakvim.Visible = true;  // takvimi geri göster
+            LoadTakvimGrid();            // takvimi tazele
+        }
+
+
     }
 }
