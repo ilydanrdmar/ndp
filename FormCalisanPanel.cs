@@ -1,11 +1,11 @@
-using kuafor.Models;
+using proje.Models;
 using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.EntityFrameworkCore;
 
-namespace kuafor
+namespace proje
 {
     public partial class FormCalisanPanel : Form
     {
@@ -51,7 +51,7 @@ namespace kuafor
             LoadYapabildigiIslemler();
             CreateWeekHeader();
             LoadTakvimGrid();
-
+            
 
         }
         private bool headerCreated = false;
@@ -194,43 +194,31 @@ namespace kuafor
         // Uygunlukları beyaz renkle boyar
         private void UygunluklariIsle(Panel grid)
         {
-            var uygunluklar = db.CalisanUygunlukTarihleri
+            var uygunluklar = db.CalisanUygunluklar
                 .Where(u => u.CalisanId == _calisan.Id)
                 .ToList();
 
-            for (int d = 0; d < 7; d++)
+            foreach (var u in uygunluklar)
             {
-                DateTime gunTarihi = aktifHafta.AddDays(d);
+                int gun = u.Gun - 1;
 
-                var oGunUygunluk = uygunluklar
-                    .Where(u => u.Tarih.Date == gunTarihi.Date)
-                    .ToList();
-
-                if (oGunUygunluk.Count == 0)
-                    continue;
-
-                foreach (var u in oGunUygunluk)
+                for (int saat = StartHour; saat < EndHour; saat++)
                 {
-                    for (int saat = StartHour; saat < EndHour; saat++)
-                    {
-                        TimeSpan cellStart = new TimeSpan(saat, 0, 0);
-                        TimeSpan cellEnd = cellStart.Add(TimeSpan.FromHours(1));
+                    bool calisiyor =
+                        saat >= u.Baslangic.Hours &&
+                        saat < u.Bitis.Hours;
 
-                        bool calisiyor = u.Baslangic < cellEnd && u.Bitis > cellStart;
+                    var cell = grid.Controls.OfType<Panel>()
+                        .FirstOrDefault(p =>
+                            p.Location.X == gun * DayWidth + 50 &&
+                            p.Location.Y == (saat - StartHour) * HourHeight + 50
+                        );
 
-                        var cell = grid.Controls.OfType<Panel>()
-                            .FirstOrDefault(p =>
-                                p.Location.X == d * DayWidth + 50 &&
-                                p.Location.Y == (saat - StartHour) * HourHeight + 50
-                            );
-
-                        if (cell != null)
-                            cell.BackColor = calisiyor ? Color.White : Color.LightGray;
-                    }
+                    if (cell != null)
+                        cell.BackColor = calisiyor ? Color.White : Color.LightGray;
                 }
             }
         }
-
 
         private void TakvimeRandevuEkle(Panel grid)
         {
@@ -415,7 +403,6 @@ namespace kuafor
             LoadTakvimGrid();            // takvimi tazele
         }
 
-
+        
     }
 }
-//en sonki hal
